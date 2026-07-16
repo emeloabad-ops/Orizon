@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KSL Mecánica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; padding-bottom: 80px; }
+        .header-ksl { background: linear-gradient(135deg, #0d1b2a, #1b3a5c); color: white; padding: 25px 0 20px; text-align: center; border-radius: 0 0 30px 30px; margin-bottom: 25px; }
+        .header-ksl h1 { font-weight: 900; letter-spacing: 2px; margin: 0; font-size: 1.8rem; }
+        .card-ksl { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: none; margin-bottom: 20px; }
+        .btn-primary-ksl { background: #1b3a5c; border: none; border-radius: 50px; padding: 14px; font-weight: 700; width: 100%; }
+        .total-price { font-size: 2.5rem; font-weight: 900; color: #c0392b; }
+        .result-item { display: flex; justify-content: space-between; border-bottom: 1px solid #e9ecef; padding: 12px 0; }
+        .badge-ksl { background: #e9ecef; color: #1b3a5c; font-weight: 600; padding: 5px 12px; border-radius: 30px; }
+        .input-lg-ksl { border-radius: 50px; padding: 15px 20px; border: 2px solid #dee2e6; font-size: 1rem; }
+        .nav-ksl { display: flex; justify-content: space-around; background: white; padding: 10px; border-radius: 50px; margin-bottom: 20px; }
+        .nav-ksl a { color: #1b3a5c; text-decoration: none; font-weight: 600; padding: 8px 20px; border-radius: 30px; cursor: pointer; }
+        .nav-ksl a.active { background: #1b3a5c; color: white; }
+        .hidden { display: none; }
+        .edit-input { border: 1px solid #ced4da; border-radius: 30px; padding: 5px 15px; width: 100px; display: inline-block; }
+        .btn-danger-ksl { background: #c0392b; border: none; border-radius: 50px; padding: 6px 15px; font-size: 0.8rem; color: white; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9ecef; padding: 10px 0; }
+        .btn-ksl { background: #1b3a5c; border: none; border-radius: 50px; padding: 10px 25px; font-weight: 600; color: white; }
+        #loginScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0d1b2a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            flex-direction: column;
+            color: white;
+        }
+        #loginScreen input {
+            border-radius: 50px;
+            padding: 15px 20px;
+            border: none;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        #loginScreen button {
+            margin-top: 15px;
+            background: #1b3a5c;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 40px;
+            font-weight: 700;
+            color: white;
+        }
+        #loginScreen .error {
+            color: #ff6b6b;
+            margin-top: 10px;
+        }
+        .login-logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="login-logo">🔧</div>
+    <h2>KSL Mecánica</h2>
+    <p style="margin-bottom: 20px;">Ingresa la contraseña</p>
+    <input type="password" id="passwordInput" placeholder="Contraseña">
+    <button onclick="verificarPassword()">Entrar</button>
+    <div id="loginError" class="error"></div>
+</div>
+
+<div id="appContent" style="display: none;">
+    <div class="container">
+        <div class="header-ksl">
+            <h1><i class="bi bi-wrench"></i> KSL Mecánica</h1>
+            <p>Cotización inteligente para motos y triciclos eléctricos</p>
+        </div>
+
+        <div class="nav-ksl">
+            <a id="btnCotizar" class="active" onclick="mostrarSeccion('cotizar')"><i class="bi bi-calculator"></i> Cotizar</a>
+            <a id="btnAjustes" onclick="mostrarSeccion('ajustes')"><i class="bi bi-gear"></i> Ajustes</a>
+            <a onclick="cerrarSesion()" style="color:#c0392b;"><i class="bi bi-box-arrow-right"></i> Salir</a>
+        </div>
+
+        <div id="seccionCotizar">
+            <div class="card-ksl">
+                <h5><i class="bi bi-search"></i> ¿Qué necesita el cliente?</h5>
+                <div class="mb-3">
+                    <input type="text" id="clienteNombre" class="form-control input-lg-ksl" placeholder="Nombre del cliente (opcional)">
+                </div>
+                <div class="mb-3">
+                    <textarea id="descripcionTrabajo" class="form-control input-lg-ksl" rows="3" placeholder="Ej: Cambio de rodamientos delanteros y pastillas de freno"></textarea>
+                </div>
+                <button onclick="cotizar()" class="btn btn-primary-ksl"><i class="bi bi-cash-stack"></i> Calcular precio</button>
+            </div>
+
+            <div id="resultados" style="display: none;" class="card-ksl">
+                <h5><i class="bi bi-list-ul"></i> Desglose</h5>
+                <div id="listaItems"></div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-weight: 700;">TOTAL</span>
+                    <span class="total-price" id="totalPrecio">$0.00</span>
+                </div>
+                <div id="trabajoId" style="font-size:0.8rem; color:#6c757d; margin-top:10px;"></div>
+            </div>
+
+            <div class="card-ksl">
+                <h5><i class="bi bi-clock-history"></i> Últimos trabajos</h5>
+                <div id="historialLista"><p class="text-muted">Cargando...</p></div>
+            </div>
+        </div>
+
+        <div id="seccionAjustes" class="hidden">
+            <div class="card-ksl">
+                <h5><i class="bi bi-tools"></i> Gestionar servicios y precios</h5>
+                <div id="listaServicios"><p class="text-muted">Cargando...</p></div>
+                <hr>
+                <div class="row g-2">
+                    <div class="col-7"><input id="nuevoServicio" class="form-control form-control-sm" placeholder="Nombre del servicio"></div>
+                    <div class="col-3"><input id="nuevoPrecioServ" class="form-control form-control-sm" placeholder="Precio"></div>
+                    <div class="col-2"><button onclick="agregarServicio()" class="btn btn-ksl btn-sm w-100">+</button></div>
+                </div>
+                <p class="text-muted small text-center mt-2">Los cambios se guardan automáticamente.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDemoKey123456789",
+        authDomain: "tu-proyecto.firebaseapp.com",
+        databaseURL: "https://tu-proyecto-default-rtdb.firebaseio.com",
+        projectId: "tu-proyecto",
+        storageBucket: "tu-proyecto.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abcdef"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    const CONTRASENA_CORRECTA = "KSL2025";
+
+    function verificarPassword() {
+        const input = document.getElementById('passwordInput').value;
+        const errorDiv = document.getElementById('loginError');
+        if (input === CONTRASENA_CORRECTA) {
+            localStorage.setItem('ksl_auth', 'true');
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            cargarServicios();
+            cargarHistorial();
+            errorDiv.textContent = '';
+        } else {
+            errorDiv.textContent = '❌ Contraseña incorrecta';
+        }
+    }
+
+    function cerrarSesion() {
+        localStorage.removeItem('ksl_auth');
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('appContent').style.display = 'none';
+        document.getElementById('passwordInput').value = '';
+    }
+
+    window.onload = function() {
+        if (localStorage.getItem('ksl_auth') === 'true') {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            cargarServicios();
+            cargarHistorial();
+        }
+    };
+
+    let serviciosCache = [];
+
+    function mostrarSeccion(seccion) {
+        document.getElementById('seccionCotizar').classList.toggle('hidden', seccion !== 'cotizar');
+        document.getElementById('seccionAjustes').classList.toggle('hidden', seccion !== 'ajustes');
+        document.getElementById('btnCotizar').classList.toggle('active', seccion === 'cotizar');
+        document.getElementById('btnAjustes').classList.toggle('active', seccion === 'ajustes');
+        if (seccion === 'ajustes') cargarServicios();
+    }
+
+    function cotizar() {
+        const texto = document.getElementById('descripcionTrabajo').value.trim();
+        const cliente = document.getElementById('clienteNombre').value.trim() || 'Cliente sin registrar';
+        if (!texto) { alert('Escribe lo que necesita el cliente.'); return; }
+
+        const textoLimpio = texto.toLowerCase();
+        const palabras = textoLimpio.split(/\s+/);
+        let items = [];
+        let total = 0;
+        let vistos = new Set();
+
+        serviciosCache.forEach(s => {
+            const nombreLower = s.nombre.toLowerCase();
+            let coincide = false;
+            if (nombreLower.includes(textoLimpio)) coincide = true;
+            else {
+                const palabrasServicio = nombreLower.split(/\s+/);
+                let aciertos = 0;
+                palabrasServicio.forEach(p => {
+                    if (palabras.some(w => w.length > 2 && p.includes(w))) aciertos++;
+                });
+                if (aciertos >= palabrasServicio.length * 0.6) coincide = true;
+            }
+            if (coincide && !vistos.has(s.id)) {
+                vistos.add(s.id);
+                items.push({ nombre: s.nombre, precio: s.precio });
+                total += s.precio;
+            }
+        });
+
+        document.getElementById('resultados').style.display = 'block';
+        let html = '';
+        if (items.length === 0) html = '<p class="text-muted">No se encontraron coincidencias.</p>';
+        else {
+            items.forEach(item => {
+                html += `<div class="result-item">
+                    <span><span class="badge-ksl">Mano de obra</span> ${item.nombre}</span>
+                    <span><strong>$${item.precio.toFixed(2)}</strong></span>
+                </div>`;
+            });
+        }
+        document.getElementById('listaItems').innerHTML = html;
+        document.getElementById('totalPrecio').innerText = '$' + total.toFixed(2);
+
+        database.ref('trabajos').push({
+            cliente: cliente,
+            descripcion: texto,
+            total: total,
+            fecha: new Date().toLocaleString(),
+            estado: 'Cotizado'
+        });
+        document.getElementById('trabajoId').innerText = '✅ Trabajo guardado en la nube.';
+        cargarHistorial();
+    }
+
+    function cargarServicios() {
+        database.ref('servicios').on('value', snapshot => {
+            const data = snapshot.val();
+            serviciosCache = [];
+            let html = '';
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    const s = data[key];
+                    s.id = key;
+                    serviciosCache.push(s);
+                    html += `<div class="list-item" data-id="${key}">
+                        <div>
+                            <input class="edit-input" value="${s.nombre}" onchange="editarServicio('${key}', 'nombre', this.value)">
+                            <input class="edit-input" value="${s.precio}" onchange="editarServicio('${key}', 'precio', this.value)">
+                        </div>
+                        <button class="btn-danger-ksl" onclick="eliminarServicio('${key}')"><i class="bi bi-trash"></i></button>
+                    </div>`;
+                });
+            }
+            document.getElementById('listaServicios').innerHTML = html || '<p class="text-muted">Sin servicios.</p>';
+        });
+    }
+
+    function agregarServicio() {
+        const nombre = document.getElementById('nuevoServicio').value.trim();
+        const precio = parseFloat(document.getElementById('nuevoPrecioServ').value);
+        if (!nombre || isNaN(precio)) { alert('Nombre y precio válido son obligatorios'); return; }
+        database.ref('servicios').push({ nombre, precio });
+        document.getElementById('nuevoServicio').value = '';
+        document.getElementById('nuevoPrecioServ').value = '';
+    }
+
+    function editarServicio(id, campo, valor) {
+        const update = {};
+        update[campo] = campo === 'precio' ? parseFloat(valor) : valor;
+        database.ref('servicios/' + id).update(update);
+    }
+
+    function eliminarServicio(id) {
+        if (!confirm('¿Eliminar este servicio?')) return;
+        database.ref('servicios/' + id).remove();
+    }
+
+    function cargarHistorial() {
+        database.ref('trabajos').orderByChild('fecha').limitToLast(20).on('value', snapshot => {
+            const data = snapshot.val();
+            let html = '';
+            if (data) {
+                const trabajos = Object.values(data).reverse();
+                trabajos.forEach(t => {
+                    html += `<div class="result-item">
+                        <div><strong>${t.cliente}</strong><br><small class="text-muted">${t.descripcion.substring(0, 40)}...</small></div>
+                        <div class="text-end"><span class="badge bg-warning text-dark">${t.estado}</span><br><strong>$${t.total.toFixed(2)}</strong></div>
+                    </div>`;
+                });
+            }
+            document.getElementById('historialLista').innerHTML = html || '<p class="text-muted">Sin trabajos.</p>';
+        });
+    }
+
+    setTimeout(() => {
+        database.ref('servicios').once('value', snapshot => {
+            if (!snapshot.exists()) {
+                const serviciosIniciales = [
+                    { nombre: "Cambio de rodamientos delanteros", precio: 2000 },
+                    { nombre: "Cambio de pastillas de freno", precio: 2000 },
+                    { nombre: "Mantenimiento de pinza de freno ligero", precio: 2000 },
+                    { nombre: "Mantenimiento de pinza de freno medio", precio: 4000 },
+                    { nombre: "Mantenimiento de dirección de moto eléctrica", precio: 4000 },
+                    { nombre: "Cambio de rodamientos de dirección de moto eléctrica", precio: 5000 },
+                    { nombre: "Mantenimiento de dirección de Triciclo", precio: 6000 },
+                    { nombre: "Cambio de rodamientos de dirección de Triciclo", precio: 8000 },
+                    { nombre: "Mantenimiento de barras de moto eléctrica", precio: 6000 },
+                    { nombre: "Mantenimiento de barras de Triciclo", precio: 8000 },
+                    { nombre: "Mantenimiento mecánico ligero de bicimoto", precio: 6000 },
+                    { nombre: "Mantenimiento mecánico ligero de moto eléctrica", precio: 8000 },
+                    { nombre: "Mantenimiento de motor de moto eléctrica", precio: 8000 },
+                    { nombre: "Cambio de amortiguadores", precio: 6000 },
+                    { nombre: "Cambio de sensores de moto eléctrica", precio: 6000 },
+                    { nombre: "Cambio de sensores de motor de Triciclo", precio: 8000 },
+                    { nombre: "Mantenimiento de punta de ejes de Triciclo", precio: 6000 },
+                    { nombre: "Cambio de aceite de diferencial de Triciclo", precio: 3000 },
+                    { nombre: "Defectacion", precio: 2000 },
+                    { nombre: "Desmontaje de motor eléctrico de Triciclo para revisión", precio: 2000 },
+                    { nombre: "Montaje sencillo de motor eléctrico para Triciclo", precio: 2000 },
+                    { nombre: "Montaje y refaseo de motor eléctrico para Triciclo", precio: 10000 },
+                    { nombre: "Montaje de terminal eléctrico de fase de motor", precio: 1000 },
+                    { nombre: "Montaje de terminal de conexión", precio: 1000 },
+                    { nombre: "Soldadura de cables de potencia", precio: 1000 },
+                    { nombre: "Instalación de engaño de 72V a 60V", precio: 10000 },
+                    { nombre: "Instalación y configuración de GPS", precio: 6000 },
+                    { nombre: "Mantenimiento de motor de Triciclo", precio: 8000 }
+                ];
+                serviciosIniciales.forEach(s => database.ref('servicios').push(s));
+            }
+        });
+    }, 1000);
+</script>
+</body>
+</html>
