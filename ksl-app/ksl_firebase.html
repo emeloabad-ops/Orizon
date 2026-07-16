@@ -6,6 +6,7 @@
     <title>KSL Mecánica</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
@@ -26,6 +27,7 @@
         .btn-danger-ksl { background: #c0392b; border: none; border-radius: 50px; padding: 6px 15px; font-size: 0.8rem; color: white; }
         .list-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9ecef; padding: 10px 0; }
         .btn-ksl { background: #1b3a5c; border: none; border-radius: 50px; padding: 10px 25px; font-weight: 600; color: white; }
+        /* Pantalla de login */
         #loginScreen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -67,6 +69,7 @@
 </head>
 <body>
 
+<!-- PANTALLA DE LOGIN -->
 <div id="loginScreen">
     <div class="login-logo">🔧</div>
     <h2>KSL Mecánica</h2>
@@ -76,6 +79,7 @@
     <div id="loginError" class="error"></div>
 </div>
 
+<!-- CONTENIDO PRINCIPAL (oculto hasta login) -->
 <div id="appContent" style="display: none;">
     <div class="container">
         <div class="header-ksl">
@@ -89,6 +93,7 @@
             <a onclick="cerrarSesion()" style="color:#c0392b;"><i class="bi bi-box-arrow-right"></i> Salir</a>
         </div>
 
+        <!-- Sección Cotizar -->
         <div id="seccionCotizar">
             <div class="card-ksl">
                 <h5><i class="bi bi-search"></i> ¿Qué necesita el cliente?</h5>
@@ -118,6 +123,7 @@
             </div>
         </div>
 
+        <!-- Sección Ajustes -->
         <div id="seccionAjustes" class="hidden">
             <div class="card-ksl">
                 <h5><i class="bi bi-tools"></i> Gestionar servicios y precios</h5>
@@ -135,6 +141,7 @@
 </div>
 
 <script>
+    // ========== CONFIGURACIÓN DE FIREBASE ==========
     const firebaseConfig = {
         apiKey: "AIzaSyDemoKey123456789",
         authDomain: "tu-proyecto.firebaseapp.com",
@@ -145,9 +152,11 @@
         appId: "1:123456789:web:abcdef"
     };
 
+    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // ========== AUTENTICACIÓN ==========
     const CONTRASENA_CORRECTA = "KSL2025";
 
     function verificarPassword() {
@@ -172,15 +181,20 @@
         document.getElementById('passwordInput').value = '';
     }
 
+    // ========== COMPROBAR SESIÓN AL CARGAR ==========
     window.onload = function() {
         if (localStorage.getItem('ksl_auth') === 'true') {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             cargarServicios();
             cargarHistorial();
+        } else {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('appContent').style.display = 'none';
         }
     };
 
+    // ========== FUNCIONES DE LA APP ==========
     let serviciosCache = [];
 
     function mostrarSeccion(seccion) {
@@ -196,6 +210,7 @@
         const cliente = document.getElementById('clienteNombre').value.trim() || 'Cliente sin registrar';
         if (!texto) { alert('Escribe lo que necesita el cliente.'); return; }
 
+        // Buscar en serviciosCache
         const textoLimpio = texto.toLowerCase();
         const palabras = textoLimpio.split(/\s+/);
         let items = [];
@@ -235,17 +250,20 @@
         document.getElementById('listaItems').innerHTML = html;
         document.getElementById('totalPrecio').innerText = '$' + total.toFixed(2);
 
-        database.ref('trabajos').push({
+        // Guardar en Firebase (base de datos compartida)
+        const nuevoTrabajo = {
             cliente: cliente,
             descripcion: texto,
             total: total,
             fecha: new Date().toLocaleString(),
             estado: 'Cotizado'
-        });
+        };
+        database.ref('trabajos').push(nuevoTrabajo);
         document.getElementById('trabajoId').innerText = '✅ Trabajo guardado en la nube.';
         cargarHistorial();
     }
 
+    // ========== CARGAR SERVICIOS DESDE FIREBASE ==========
     function cargarServicios() {
         database.ref('servicios').on('value', snapshot => {
             const data = snapshot.val();
@@ -269,6 +287,7 @@
         });
     }
 
+    // ========== AGREGAR SERVICIO ==========
     function agregarServicio() {
         const nombre = document.getElementById('nuevoServicio').value.trim();
         const precio = parseFloat(document.getElementById('nuevoPrecioServ').value);
@@ -278,17 +297,20 @@
         document.getElementById('nuevoPrecioServ').value = '';
     }
 
+    // ========== EDITAR SERVICIO ==========
     function editarServicio(id, campo, valor) {
         const update = {};
         update[campo] = campo === 'precio' ? parseFloat(valor) : valor;
         database.ref('servicios/' + id).update(update);
     }
 
+    // ========== ELIMINAR SERVICIO ==========
     function eliminarServicio(id) {
         if (!confirm('¿Eliminar este servicio?')) return;
         database.ref('servicios/' + id).remove();
     }
 
+    // ========== CARGAR HISTORIAL DESDE FIREBASE ==========
     function cargarHistorial() {
         database.ref('trabajos').orderByChild('fecha').limitToLast(20).on('value', snapshot => {
             const data = snapshot.val();
@@ -306,6 +328,8 @@
         });
     }
 
+    // ========== AL CARGAR, TRAER DATOS INICIALES ==========
+    // Si no hay servicios, cargar los predeterminados
     setTimeout(() => {
         database.ref('servicios').once('value', snapshot => {
             if (!snapshot.exists()) {
@@ -339,7 +363,9 @@
                     { nombre: "Instalación y configuración de GPS", precio: 6000 },
                     { nombre: "Mantenimiento de motor de Triciclo", precio: 8000 }
                 ];
-                serviciosIniciales.forEach(s => database.ref('servicios').push(s));
+                serviciosIniciales.forEach(s => {
+                    database.ref('servicios').push(s);
+                });
             }
         });
     }, 1000);
