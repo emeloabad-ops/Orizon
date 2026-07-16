@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Beautiful detailed vector shield representing secure bank payments -->
+    <path
+        android:fillColor="#DFB15B"
+        android:pathData="M54,16 L84,26 L84,56 C84,77 54,92 54,92 C54,92 24,77 24,56 L24,26 Z" />
+    
+    <!-- Contrasting dark inner shield to frame the wrench -->
+    <path
+        android:fillColor="#0C192C"
+        android:pathData="M54,21 L79,29 L79,56 C79,74 54,87 54,87 C54,87 29,74 29,56 L29,29 Z" />
+
+    <!-- A golden mechanical wrench path inside the shield representing the workshop -->
+    <path
+        android:fillColor="#DFB15B"
+        android:pathData="M65.5,35.5 C68.3,38.3 68.3,42.8 65.5,45.5 C64.6,46.4 63.5,47.0 62.3,47.3 L43.5,66.1 C42.1,67.5 39.9,67.5 38.5,66.1 C37.1,64.7 37.1,62.5 38.5,61.1 L57.3,42.3 C57.0,41.1 57.6,39.9 58.5,39.0 C61.2,36.3 62.7,35.5 65.5,35.5 Z" />
+</vector>

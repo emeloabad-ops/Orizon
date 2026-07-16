@@ -1,0 +1,6 @@
+{
+  "name": "KSL",
+  "description": "Cotización automática para taller mecánico de motos y triciclos eléctricos, con pasarela de pagos profesional estilo bancario (VISA, PayPal y Criptomonedas).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
